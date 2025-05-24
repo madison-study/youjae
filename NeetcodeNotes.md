@@ -1,5 +1,7 @@
 # 📝 LeetCode Problem Notes
 
+---
+
 ## 📑 Table of Contents
 
 ### Arrays & Hashing
