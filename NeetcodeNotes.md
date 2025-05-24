@@ -18,7 +18,7 @@
 
 Sort the array and check if any two adjacent elements are the same.
 
-### 💻 My Solution
+### 💻 My Solution ([Screenshot](./neetcode/ContainsDuplicate.png))
 
 ```python
 class Solution:
