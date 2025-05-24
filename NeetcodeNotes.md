@@ -1,16 +1,14 @@
 # 📝 LeetCode Problem Notes
 
----
-
 ## 📑 Table of Contents
 
 ### Arrays & Hashing
 
-- [217. Contains Duplicate](https://leetcode.com/problems/contains-duplicate)
-- [242. Valid Anagram](https://leetcode.com/problems/valid-anagram)
-- [1. Two Sum](https://leetcode.com/problems/two-sum)
-- [49. Group Anagrams](https://leetcode.com/problems/group-anagrams)
-- [347. Top K Frequent Elements](https://leetcode.com/problems/top-k-frequent-elements)
+- [217. Contains Duplicate](#-217-contains-duplicate)
+- [242. Valid Anagram](#-242-valid-anagram)
+- [1. Two Sum](#-1-two-sum)
+- [49. Group Anagrams](#-49-group-anagrams)
+- [347. Top K Frequent Elements](#-347-top-k-frequent-elements)
 
 ---
 
