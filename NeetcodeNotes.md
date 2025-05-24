@@ -18,7 +18,7 @@
 
 Sort the array and check if any two adjacent elements are the same.
 
-### 💻 My Solution ([Screenshot](./neetcode/ContainsDuplicate.png))
+### 💻 My Solution ([Screenshot](./neetcode/arrays&hashing/ContainsDuplicate.png))
 
 ```python
 class Solution:
@@ -48,7 +48,7 @@ class Solution:
 
 Sort the strings and check if they are equal.
 
-### 💻 My Solution
+### 💻 My Solution ([Screenshot](./neetcode/arrays&hashing/ValidAnagram.png))
 
 ```python
 class Solution:
@@ -75,7 +75,7 @@ class Solution:
 
 Use a hash map to store the indices of the numbers.
 
-### 💻 My Solution
+### 💻 My Solution ([Screenshot](./neetcode/arrays&hashing/TwoSum.png))
 
 ```python
 class Solution:
@@ -105,7 +105,7 @@ class Solution:
 
 Use a hash map to store the indices of the sorted strings.
 
-### 💻 My Solution
+### 💻 My Solution ([Screenshot](./neetcode/arrays&hashing/GroupAnagrams.png))
 
 ```python
 class Solution:
@@ -141,7 +141,7 @@ class Solution:
 
 Use a hash map to keep track of the frequency of each number.
 
-### 💻 My Solution
+### 💻 My Solution ([Screenshot](./neetcode/arrays&hashing/TopKFrequentElements.png))
 
 ```python
 class Solution:
