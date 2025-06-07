@@ -1129,7 +1129,7 @@ GRPO can be applied to **any verifiable task** where the correctness of the resp
 **Process**:
 For each question $q$, generate $G$ outputs (group size) from the trained policy:
 
-$$ \{o*1, o_2, o_3, ..., o_G\}^{\pi*{\theta\_{old}}}, \text{ where } G = 8 $$
+$$ \{o\*1, o*2, o_3, ..., o_G \pi*{\theta\_{old}}\}, \text{ where } G = 8 $$
 
 Each $o_i$ represents one completion from the model.
 
@@ -1219,7 +1219,7 @@ $$ J*{GRPO}(\theta) = \left[\frac{1}{G} \sum*{i=1}^G \min\left(\frac{\pi*\theta(
 
 #### 3. KL Divergence Penalty
 
-**Formula**: $\beta D_{KL}(\pi_\theta || \pi_{ref})$
+**Formula**: $\beta D_{KL}(\pi_\theta \|\| \pi_{ref})$
 
 **Mathematical Definition**:
 
