@@ -1129,7 +1129,7 @@ GRPO can be applied to **any verifiable task** where the correctness of the resp
 **Process**:
 For each question $q$, generate $G$ outputs (group size) from the trained policy:
 
-$$ \{o\*1, o*2, o_3, ..., o_G \pi*{\theta\_{old}}\}, \text{ where } G = 8 $$
+$$ \{o_1, o_2, o_3, ..., o_G \pi_{\theta_{old}}\}, \text{ where } G = 8 $$
 
 Each $o_i$ represents one completion from the model.
 
@@ -1184,7 +1184,7 @@ $$ A_i = \frac{r_i - \text{mean}(\{r_1, r_2, ..., r_G\})}{\text{std}(\{r_1, r_2,
 
 The complete objective function for policy updates:
 
-$$ J*{GRPO}(\theta) = \left[\frac{1}{G} \sum*{i=1}^G \min\left(\frac{\pi*\theta(o_i|q)}{\pi*{\theta*{old}}(o_i|q)} A_i, \text{clip}\left(\frac{\pi*\theta(o*i|q)}{\pi*{\theta*{old}}(o*i|q)}, 1-\varepsilon, 1+\varepsilon\right) A_i\right)\right] - \beta D*{KL}(\pi*\theta \| \| \pi\*{ref}) $$
+$$ J_{GRPO}(\theta) = \left[\frac{1}{G} \sum_{i=1}^G \min\left(\frac{\pi*\theta(o_i|q)}{\pi*{\theta*{old}}(o_i|q)} A_i, \text{clip}\left(\frac{\pi*\theta(o*i|q)}{\pi*{\theta*{old}}(o*i|q)}, 1-\varepsilon, 1+\varepsilon\right) A_i\right)\right] - \beta D*{KL}(\pi*\theta \| \| \pi\*{ref}) $$
 
 ### Key Components Analysis
 
@@ -1223,7 +1223,7 @@ $$ J*{GRPO}(\theta) = \left[\frac{1}{G} \sum*{i=1}^G \min\left(\frac{\pi*\theta(
 
 **Mathematical Definition**:
 
-$$ D*{KL}(P\| \|Q) = \sum*{x\in X} P(x) \log\left(\frac{P(x)}{Q(x)}\right) $$
+$$ D_{KL}(P\| \|Q) = \sum_{x\in X} P(x) \log\left(\frac{P(x)}{Q(x)}\right) $$
 
 **Purpose**: Prevent model from deviating too far from original behavior.
 
