@@ -42,6 +42,26 @@
   - [Model Architectures and Applications](#model-architectures-and-applications)
   - [Looking Ahead](#looking-ahead)
 
+### Chapter 2. Reasoning models
+
+- [Reinforcement Learning on LLMs](#reinforcement-learning-on-llms)
+  - [What is Reinforcement Learning?](#what-is-reinforcement-learning)
+  - [Key RL Components](#key-rl-components)
+  - [The RL Process](#the-rl-process)
+  - [Role of RL in LLMs](#role-of-rl-in-llms)
+  - [Reinforcement Learning from Human Feedback (RLHF)](#reinforcement-learning-from-human-feedback-rlhf)
+  - [Group Relative Policy Optimization (GRPO)](#group-relative-policy-optimization-grpo)
+- [Understanding the DeepSeek R1 Paper](#understanding-the-deepseek-r1-paper)
+  - [DeepSeek R1 Overview](#deepseek-r1-overview)
+  - [The Breakthrough 'Aha' Moment](#the-breakthrough-aha-moment)
+  - [The Training Process](#the-training-process)
+  - [GRPO Algorithm Deep Dive](#grpo-algorithm-deep-dive)
+  - [Limitations and Challenges](#limitations-and-challenges)
+  - [Advanced GRPO Technical Analysis](#advanced-grpo-technical-analysis)
+    - [GRPO Algorithm Details](#grpo-algorithm-details)
+    - [Mathematical Formulations](#mathematical-formulations)
+    - [Worked Example](#worked-example)
+
 # Natural Language Processing and Large Language Models
 
 ## What is NLP?
@@ -680,3 +700,616 @@ The foundation you've built in this chapter will serve you well as you explore m
 5. **Bias awareness is critical**: All models inherit biases from training data
 6. **Practical considerations**: Performance, memory, and ethical implications matter
 7. **Continuous evolution**: Field rapidly advancing with new techniques and optimizations
+
+# Reinforcement Learning on LLMs
+
+## What is Reinforcement Learning?
+
+**Reinforcement Learning (RL)** is a machine learning approach where an agent learns to make decisions through trial and error, receiving feedback in the form of rewards or penalties.
+
+### Simple Analogy
+
+Training a dog to sit:
+
+- **Command**: "Sit!"
+- **Action**: Dog sits or doesn't sit
+- **Reward**: Treat and praise for sitting
+- **Learning**: Dog associates sitting with positive outcomes
+
+![RL Basic Process](llm/transformer/rl.jpg)
+
+## Key RL Components
+
+### Agent
+
+- **Definition**: The learner making decisions
+- **In LLMs**: The language model itself
+- **Role**: Makes choices and learns from environment feedback
+
+### Environment
+
+- **Definition**: The world the agent interacts with
+- **In LLMs**: Users, simulated scenarios, or evaluation systems
+- **Role**: Provides context and feedback to the agent
+
+### Action
+
+- **Definition**: Choices the agent can make
+- **In LLMs**:
+  - Generating words in sentences
+  - Choosing answers to questions
+  - Deciding conversation responses
+
+### Reward
+
+- **Definition**: Feedback signal from environment
+- **Types**:
+  - **Positive rewards**: "Good job!" signals
+  - **Negative rewards**: "Try something else" signals
+- **In LLMs**: Scores for helpfulness, truthfulness, harmlessness
+
+### Policy
+
+- **Definition**: Agent's strategy for choosing actions
+- **Evolution**: Starts random, improves through learning
+- **Goal**: Maximize cumulative reward over time
+
+## The RL Process
+
+![RL Process](llm/transformer/rl_process.jpg)
+
+The RL process follows a continuous cycle of trial and error:
+
+| Step               | Process                            | Description                                               |
+| ------------------ | ---------------------------------- | --------------------------------------------------------- |
+| 1. **Observation** | Agent observes environment         | Takes in information about current state and surroundings |
+| 2. **Action**      | Agent takes action based on policy | Uses learned strategy to decide what to do next           |
+| 3. **Feedback**    | Environment provides reward        | Agent receives feedback on action quality                 |
+| 4. **Learning**    | Agent updates policy               | Adjusts strategy based on reward received                 |
+| 5. **Iteration**   | Repeat the process                 | Continuous cycle for ongoing improvement                  |
+
+### Learning Through Experience
+
+Like learning to ride a bike:
+
+- **Initial attempts**: Wobbling and falling (negative reward)
+- **Success moments**: Balancing and smooth pedaling (positive reward)
+- **Adaptation**: Adjusting actions based on feedback
+- **Mastery**: Developing consistent riding skills
+
+## Role of RL in LLMs
+
+### Limitations of Traditional Training
+
+**Pre-training challenges**:
+
+- Models excel at next-word prediction
+- Generate fluent, grammatically correct text
+- **But lack**: Helpfulness, harmlessness, human alignment
+
+**Supervised fine-tuning limitations**:
+
+- Produces structured outputs
+- May generate factually incorrect content
+- Doesn't guarantee helpful or aligned responses
+
+### RL Solutions for LLMs
+
+**Enhanced capabilities through RL**:
+
+- **Helpfulness**: Provide useful and relevant information
+- **Harmlessness**: Avoid toxic, biased, or harmful content
+- **Human Alignment**: Respond naturally and engagingly
+
+**Benefits of RL in LLMs**:
+
+| Benefit                   | Description                                                              |
+| ------------------------- | ------------------------------------------------------------------------ |
+| **Improved Control**      | Guide text generation toward specific goals (helpful, creative, concise) |
+| **Human Value Alignment** | Learn from human judgments and preferences                               |
+| **Behavior Mitigation**   | Reduce toxic language, misinformation, and biases                        |
+
+## Reinforcement Learning from Human Feedback (RLHF)
+
+**RLHF** uses human feedback as the reward signal to align language models with human preferences.
+
+![RLHF Process](llm/transformer/rlhf.jpg)
+
+### RLHF Process
+
+#### 1. Collect Human Preferences
+
+- **Method**: Compare different LLM responses to same prompt
+- **Example**: "Which answer to 'What is the capital of France?' is better?"
+- **Data**: Human preference rankings and comparisons
+
+#### 2. Train Reward Model
+
+- **Purpose**: Learn to predict human preferences
+- **Training**: Use human preference data
+- **Function**: Score responses based on helpfulness, harmlessness, alignment
+
+#### 3. Fine-tune LLM with RL
+
+- **Setup**: Reward model acts as environment
+- **Process**:
+  - LLM generates responses (actions)
+  - Reward model scores responses (provides rewards)
+  - LLM learns to produce higher-scoring text
+
+### RLHF Success Stories
+
+**Popular models using RLHF**:
+
+- **OpenAI GPT-4**: Advanced conversational AI
+- **Google Gemini**: Multimodal reasoning model
+- **DeepSeek R1**: Specialized reasoning model
+
+## Group Relative Policy Optimization (GRPO)
+
+### Why GRPO?
+
+**GRPO** represents a significant advancement in RLHF techniques, offering improvements over existing methods.
+
+### Comparison with Other Methods
+
+#### Proximal Policy Optimization (PPO)
+
+- **Approach**: Policy gradient method with separate reward model
+- **Characteristics**: First highly effective RLHF technique
+- **Complexity**: Requires careful hyperparameter tuning
+
+#### Direct Preference Optimization (DPO)
+
+- **Approach**: Eliminates separate reward model
+- **Method**: Uses preference data directly as classification task
+- **Simplification**: Frames problem as chosen vs. rejected responses
+
+### GRPO Advantages
+
+#### Group-Based Approach
+
+- **Method**: Groups similar samples together for comparison
+- **Benefits**:
+  - More stable gradients
+  - Better convergence properties
+  - Reduced variance in training
+
+#### Flexible Reward Sources
+
+**GRPO doesn't require preference data** and can use various reward signals:
+
+| Reward Source           | Application             | Example                                  |
+| ----------------------- | ----------------------- | ---------------------------------------- |
+| **Length Function**     | Control response length | Reward shorter, more concise answers     |
+| **Mathematical Solver** | Verify correctness      | Check solution accuracy in math problems |
+| **Factual Checker**     | Ensure accuracy         | Reward factually correct information     |
+| **Reward Model**        | General alignment       | Traditional RLHF approach                |
+
+#### Versatility
+
+- **Adaptable**: Works across different alignment tasks
+- **Flexible**: Can incorporate multiple reward signals
+- **Efficient**: Better training stability than alternatives
+
+### GRPO Process
+
+1. **Sample Grouping**: Collect similar samples for comparison
+2. **Group Evaluation**: Apply reward function to sample groups
+3. **Relative Optimization**: Update policy based on group-relative performance
+4. **Iterative Improvement**: Repeat process for continuous enhancement
+
+# Understanding the DeepSeek R1 Paper
+
+DeepSeek R1 represents a significant advancement in language model training, particularly in developing reasoning capabilities through reinforcement learning. The paper introduces a breakthrough reinforcement learning algorithm called **Group Relative Policy Optimization (GRPO)**.
+
+## DeepSeek R1 Overview
+
+### Research Goal
+
+The initial goal was to explore whether **pure reinforcement learning** could develop reasoning capabilities without supervised fine-tuning - a departure from traditional LLM training approaches.
+
+### Key Innovation
+
+- **Pure RL Approach**: Challenged the assumption that supervised fine-tuning was necessary
+- **GRPO Algorithm**: New method for more efficient and stable RL training
+- **Emergent Reasoning**: Natural development of reasoning capabilities through RL
+
+### Two Model Variants
+
+| Feature                  | DeepSeek-R1-Zero                        | DeepSeek-R1                                 |
+| ------------------------ | --------------------------------------- | ------------------------------------------- |
+| **Training Approach**    | Pure RL                                 | Multi-phase (SFT + RL)                      |
+| **Fine-tuning**          | None                                    | Supervised fine-tuning                      |
+| **Reasoning Capability** | Emergent                                | Enhanced                                    |
+| **AIME Performance**     | 71.0%                                   | 79.8%                                       |
+| **Key Characteristics**  | Strong reasoning but readability issues | Better language consistency and readability |
+
+## The Breakthrough 'Aha' Moment
+
+![Aha Moment](llm/transformer/aha_moment.png)
+
+### What is the 'Aha' Moment?
+
+One of the most remarkable discoveries in R1-Zero's training was the emergence of the **"Aha Moment"** - similar to human sudden realizations during problem-solving.
+
+### The Process
+
+1. **Initial Attempt**: Model makes first attempt at solving a problem
+2. **Recognition**: Recognizes potential errors or inconsistencies
+3. **Self-Correction**: Adjusts approach based on recognition
+4. **Explanation**: Can explain why the new approach is better
+
+### Human-like Example
+
+**Puzzle Solving Process**:
+
+- **First try**: "This piece should go here based on the color"
+- **Recognition**: "But wait, the shape doesn't quite fit"
+- **Correction**: "Ah, it actually belongs over there"
+- **Explanation**: "Because both the color and shape pattern match in this position"
+
+### Significance
+
+- **Emergent Behavior**: Arose naturally from RL training without explicit programming
+- **True Learning**: Demonstrates learning rather than mere memorization
+- **Reasoning Development**: Shows genuine problem-solving capability evolution
+
+## The Training Process
+
+The training process involves **four distinct phases**, each building upon the previous one:
+
+### Phase 1: Cold Start Phase (Quality Foundation)
+
+**Purpose**: Establish strong foundation for readability and response quality
+
+**Process**:
+
+- Start with DeepSeek-V3-Base model
+- Use thousands of high-quality samples from R1-Zero
+- Supervised fine-tuning with small but high-quality dataset
+- Focus on baseline readability and response quality
+
+### Phase 2: Reasoning RL Phase (Capability Building)
+
+**Purpose**: Develop core reasoning capabilities across multiple domains
+
+**Key Features**:
+
+- **Domains**: Mathematics, coding, science, and logic
+- **Rule-based RL**: Rewards directly tied to solution correctness
+- **Verifiable Tasks**: All tasks can be objectively evaluated
+- **Direct Optimization**: Eliminates need for separate reward model
+
+**Innovation**: Streamlined training process with direct correctness verification
+
+### Phase 3: Rejection Sampling Phase (Quality Control)
+
+**Purpose**: Filter and refine model outputs through quality control
+
+**Process**:
+
+1. Model generates multiple samples
+2. DeepSeek-V3 serves as quality judge
+3. Evaluation across broad scope beyond pure reasoning
+4. Filtered data used for supervised fine-tuning
+
+**Innovation**: Combines multiple quality signals for high-standard outputs
+
+### Phase 4: Diverse RL Phase (Broad Alignment)
+
+**Purpose**: Achieve human preference alignment across multiple task types
+
+**Hybrid Approach**:
+
+- **Deterministic Tasks**: Rule-based rewards
+- **Subjective Tasks**: LLM feedback evaluation
+- **Human Alignment**: Combines precision with flexibility
+
+## GRPO Algorithm Deep Dive
+
+### Core Innovation
+
+GRPO's breakthrough lies in its capacity to **"directly optimize for preference rectification"** - a more direct and efficient route compared to traditional RL algorithms like PPO.
+
+### Three Main Components
+
+#### 1. Group Formation: Creating Multiple Solutions
+
+![GRPO Group Formation](llm/transformer/grpo_group_formation.jpg)
+
+**Process**:
+
+- Generate multiple attempts (4, 8, or 16) for same problem
+- Similar to student trying multiple approaches
+- Keep all attempts together as a group for comparison
+
+**Example - Math Problem**:
+
+- **Solution 1**: Step-by-step breakdown (count total → subtract roosters → account for non-laying)
+- **Solution 2**: Alternative but equally valid approach
+- **Solution 3**: Contains mistakes or less efficient methods
+- **All solutions**: Kept together for comparative learning
+
+#### 2. Preference Learning: Understanding Quality
+
+![Preference Learning](llm/transformer/preference_learning.jpg)
+
+**Key Advantages**:
+
+- **Flexible Evaluation**: Can use any function or model for quality assessment
+- **No Separate Reward Model**: Unlike traditional RLHF methods
+- **Multiple Quality Signals**: Length, accuracy, formatting, reasoning consistency
+
+**Group Relative Advantage Formula**:
+
+```
+Advantage = (reward - mean(group_rewards)) / std(group_rewards)
+```
+
+**Benefits**:
+
+- **Normalized Scoring**: Like grading on a curve for AI
+- **Relative Comparison**: Understands which solutions are better within group
+- **Stability**: Prevents issues with reward scaling
+
+#### 3. Optimization: Learning from Experience
+
+**Two Main Principles**:
+
+1. **Encouragement**: Produce more solutions like successful ones
+2. **Safety Mechanism**: KL divergence penalty prevents drastic changes
+
+**Stability Features**:
+
+- **Group-based Learning**: More stable than pairwise comparisons
+- **Normalized Rewards**: Prevents scaling issues
+- **KL Penalty**: Safety net preserving existing knowledge
+
+## Limitations and Challenges
+
+### Computational Challenges
+
+**Generation Cost**:
+
+- Requires multiple completions (4-16) per prompt
+- Higher computational requirements than single-generation methods
+
+**Batch Size Constraints**:
+
+- Need to process groups together
+- Limits effective batch sizes
+- Adds training complexity
+
+### Design Challenges
+
+**Reward Function Design**:
+
+- Training quality depends on well-designed reward functions
+- Poorly designed rewards can lead to unintended behaviors
+- Risk of optimizing for wrong objectives
+
+**Group Size Tradeoffs**:
+
+- Balance between solution diversity and computational cost
+- Too few samples = insufficient diversity
+- Too many samples = increased training time and resources
+
+**KL Divergence Tuning**:
+
+- Requires careful balance in KL divergence penalty
+- Too high = ineffective learning
+- Too low = model diverges from initial capabilities
+
+# Advanced GRPO Technical Analysis
+
+This section provides an in-depth technical understanding of Group Relative Policy Optimization (GRPO), including mathematical formulations and detailed algorithmic steps.
+
+![GRPO High Level Process](llm/transformer/grpo_high_level.png)
+
+## GRPO Algorithm Details
+
+### Core Innovation
+
+GRPO **directly evaluates model-generated responses** by comparing them within groups of generations to optimize the policy model, instead of training a separate value model (Critic). This approach leads to **significant reduction in computational cost**.
+
+### Applicability
+
+GRPO can be applied to **any verifiable task** where the correctness of the response can be determined. For instance, in mathematical reasoning, correctness can be easily verified by comparing to ground truth.
+
+### Three-Step Algorithm
+
+#### Step 1: Group Sampling
+
+**Purpose**: Generate multiple possible answers for each question to create diverse outputs for comparison.
+
+**Process**:
+For each question `q`, generate `G` outputs (group size) from the trained policy:
+
+```
+{o₁, o₂, o₃, ..., oG}^π_θ_old, where G = 8
+```
+
+Each `oᵢ` represents one completion from the model.
+
+**Example**:
+
+- **Question**: Calculate 2 + 2 × 6
+- **Outputs (G=8)**:
+  - `o₁: 14 (correct)`
+  - `o₂: 16 (wrong)`
+  - `o₃: 10 (wrong)`
+  - `...`
+  - `o₈: 14 (correct)`
+
+**Key Insight**: Diversity in generated answers (some correct, some wrong) is crucial for effective learning.
+
+#### Step 2: Advantage Calculation
+
+**Purpose**: Determine which responses are better than others within the group.
+
+##### Reward Distribution
+
+First, assign reward scores to each generated response:
+
+- `rᵢ` (e.g., 1 for correct response, 0 for wrong response)
+
+##### Advantage Value Formula
+
+The key insight: Compare outputs within the same group using standardization:
+
+```
+Aᵢ = (rᵢ - mean({r₁, r₂, ..., rG})) / std({r₁, r₂, ..., rG})
+```
+
+**Example Calculation**:
+
+- **Group Average**: `mean(rᵢ) = 0.5`
+- **Standard Deviation**: `std(rᵢ) = 0.53`
+- **Advantage (Correct)**: `Aᵢ = (1-0.5)/0.53 = 0.94`
+- **Advantage (Wrong)**: `Aᵢ = (0-0.5)/0.53 = -0.94`
+
+##### Interpretation
+
+- **Aᵢ > 0**: Response is better than average within its group
+- **Aᵢ < 0**: Response quality is below average
+- **High Aᵢ**: Generation probability will be increased during optimization
+
+#### Step 3: Policy Update
+
+**Purpose**: Use advantage values to update the model for better future responses.
+
+## Mathematical Formulations
+
+### GRPO Target Function
+
+The complete objective function for policy updates:
+
+```
+J_GRPO(θ) = [1/G ∑ᵢ₌₁ᴳ min(π_θ(oᵢ|q)/π_θ_old(oᵢ|q) × Aᵢ,
+                               clip(π_θ(oᵢ|q)/π_θ_old(oᵢ|q), 1-ε, 1+ε) × Aᵢ)]
+             - β × D_KL(π_θ || π_ref)
+```
+
+### Key Components Analysis
+
+#### 1. Probability Ratio
+
+**Formula**: `π_θ(oᵢ|q) / π_θ_old(oᵢ|q)`
+
+**Interpretation**:
+
+- **Ratio > 1**: New model assigns higher probability to response `oᵢ`
+- **Ratio < 1**: New model assigns lower probability to `oᵢ`
+- **Purpose**: Control how much the model changes at each step
+
+#### 2. Clip Function
+
+**Formula**: `clip(π_θ(oᵢ|q)/π_θ_old(oᵢ|q), 1-ε, 1+ε)`
+
+**Purpose**: Limit ratio to be within `[1-ε, 1+ε]` to avoid drastic changes.
+
+**Example (ε = 0.2)**:
+
+| Scenario   | Old Prob | New Prob | Ratio | Clipped Ratio     |
+| ---------- | -------- | -------- | ----- | ----------------- |
+| **Case 1** | 0.5      | 0.9      | 1.8   | 1.2 (upper bound) |
+| **Case 2** | 0.5      | 0.2      | 0.4   | 0.8 (lower bound) |
+
+**Benefits**:
+
+- Encourages reinforcement of underweighted good responses
+- Controls reinforcement of already favored responses
+- Discourages overestimated poor responses
+
+#### 3. KL Divergence Penalty
+
+**Formula**: `β × D_KL(π_θ || π_ref)`
+
+**Mathematical Definition**:
+
+```
+D_KL(P||Q) = ∑_{x∈X} P(x) log(P(x)/Q(x))
+```
+
+**Purpose**: Prevent model from deviating too far from original behavior.
+
+**β Parameter Effects**:
+
+| β Value    | Effect              | Benefits            | Risks                 |
+| ---------- | ------------------- | ------------------- | --------------------- |
+| **Higher** | Stronger constraint | Maintains coherence | Slower adaptation     |
+| **Lower**  | More freedom        | Faster adaptation   | Potential instability |
+
+**DeepSeekMath Setting**: `β = 0.04`
+
+## Worked Example
+
+### Complete GRPO Process
+
+#### Problem
+
+**Question**: Calculate 2 + 2 × 6
+
+#### Step 1: Group Sampling
+
+**Generated Responses (G=8)**:
+
+- 4 correct answers (14, reward = 1)
+- 4 incorrect answers (reward = 0)
+
+#### Step 2: Advantage Calculation
+
+| Statistic               | Value                       |
+| ----------------------- | --------------------------- |
+| **Group Average**       | `mean(rᵢ) = 0.5`            |
+| **Standard Deviation**  | `std(rᵢ) = 0.53`            |
+| **Advantage (Correct)** | `Aᵢ = (1-0.5)/0.53 = 0.94`  |
+| **Advantage (Wrong)**   | `Aᵢ = (0-0.5)/0.53 = -0.94` |
+
+#### Step 3: Policy Update
+
+**Scenario**: Old policy probability for correct output `o₁` is 0.5, new policy increases to 0.7
+
+**Calculations**:
+
+- **Ratio**: `0.7/0.5 = 1.4`
+- **After Clipping**: `1.2` (with ε = 0.2)
+- **Result**: Model reinforces generation of correct output
+- **KL Divergence**: Limits deviation from reference policy
+
+### Algorithm Summary
+
+```python
+# GRPO Algorithm Pseudocode
+Input:
+- policy_model: Current model to be trained
+- reward_function: Evaluation function
+- group_size: Number of outputs per prompt (typically 8)
+- epsilon: Clipping parameter (typically 0.2)
+- beta: KL divergence weight (typically 0.04)
+
+Algorithm GRPO:
+1. For each training batch:
+   a. For each prompt q:
+      i. Generate G responses: {o₁, o₂, ..., oG}
+      ii. Compute rewards: {r₁, r₂, ..., rG}
+      iii. Calculate advantages: Aᵢ = (rᵢ - mean(r)) / std(r)
+      iv. Compute probability ratios: ratio = π_new(oᵢ|q) / π_old(oᵢ|q)
+      v. Apply clipping: clipped_ratio = clip(ratio, 1-ε, 1+ε)
+      vi. Update objective: min(ratio × Aᵢ, clipped_ratio × Aᵢ)
+   b. Apply KL divergence penalty: β × D_KL(π_new || π_ref)
+   c. Update policy parameters using gradient ascent
+
+Output: Optimized policy model
+```
+
+## Key Technical Insights
+
+1. **Group-Based Comparison**: Eliminates need for absolute quality measures
+2. **Standardized Advantages**: Provides stable learning signal across different reward scales
+3. **Controlled Updates**: Clipping prevents destabilizing large policy changes
+4. **Coherence Preservation**: KL divergence maintains model's original capabilities
+5. **Computational Efficiency**: Direct evaluation without separate critic model
+6. **Verifiable Tasks**: Works best with objectively evaluable tasks
+7. **Flexible Rewards**: Can incorporate multiple reward signals simultaneously
