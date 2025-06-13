@@ -67,6 +67,47 @@
   - [Practical Applications](#practical-applications-1)
   - [Looking Ahead](#looking-ahead-1)
 
+### Chapter 3. Model Context Protocol (MCP)
+
+- [Key Concepts and Terminology](#key-concepts-and-terminology)
+  - [The Integration Problem](#the-integration-problem)
+  - [Core MCP Terminology](#core-mcp-terminology)
+  - [Components](#components)
+  - [Capabilities](#capabilities)
+- [Architectural Components of MCP](#architectural-components-of-mcp)
+  - [Host, Client, and Server](#host-client-and-server)
+  - [Communication Flow](#communication-flow)
+  - [Key Advantages](#key-advantages)
+- [The Communication Protocol](#the-communication-protocol)
+  - [JSON-RPC: The Foundation](#json-rpc-the-foundation)
+  - [Message Types](#message-types)
+  - [Transport Mechanisms](#transport-mechanisms)
+  - [The Interaction Lifecycle](#the-interaction-lifecycle)
+  - [Protocol Evolution](#protocol-evolution)
+- [Understanding MCP Capabilities](#understanding-mcp-capabilities)
+  - [Tools](#tools)
+  - [Resources](#resources)
+  - [Prompts](#prompts)
+  - [Sampling](#sampling)
+  - [How Capabilities Work Together](#how-capabilities-work-together)
+  - [Discovery Process](#discovery-process)
+- [MCP SDK](#mcp-sdk)
+  - [SDK Overview](#sdk-overview)
+- [MCP Clients](#mcp-clients)
+    - [User Interface Clients](#user-interface-clients)
+    - [Chat Interface Clients](#chat-interface-clients)
+    - [Interactive Development Clients](#interactive-development-clients)
+    - [Client Implementation](#client-implementation)
+    - [Key Responsibilities](#key-responsibilities)
+- [Chapter Summary](#chapter-summary)
+  - [Overview](#overview)
+  - [Key Concepts](#key-concepts)
+  - [Components](#components)
+  - [Capabilities](#capabilities)
+  - [Communication Protocol](#communication-protocol)
+  - [Discovery Process](#discovery-process)
+  - [MCP SDKs](#mcp-sdks)
+
 # Natural Language Processing and Large Language Models
 
 ## What is NLP?
@@ -1356,3 +1397,457 @@ The foundation you've built in reinforcement learning and reasoning will serve a
 8. **Computational Efficiency**: Modern methods like GRPO reduce costs while improving performance
 9. **Scalability Proven**: Successful distillation shows these techniques work across model sizes
 10. **Future of AI**: Reasoning models represent a significant step toward more capable and aligned AI systems
+
+# Key Concepts and Terminology
+
+## The Integration Problem
+
+The Model Context Protocol (MCP) is often described as the "USB-C for AI applications" - providing a standardized interface for connecting AI models to external capabilities. This standardization benefits the entire ecosystem:
+
+- Users enjoy simpler, consistent experiences across AI applications
+- AI application developers gain easy integration with tools and data sources
+- Tool and data providers need only create a single implementation
+- The broader ecosystem benefits from increased interoperability
+
+### Without MCP (M×N Problem)
+
+Without a protocol like MCP, developers face the M×N integration problem - needing to create custom integrations for each possible pairing of an AI application with an external capability.
+
+![Without MCP Integration](llm/mcp/wothout_mcp.png)
+
+### With MCP (M+N Solution)
+
+MCP transforms this into an M+N problem by providing a standard interface:
+- Each AI application implements the client side of MCP once
+- Each tool/data source implements the server side once
+
+![With MCP Integration](llm/mcp/with_mcp.png)
+
+## Core MCP Terminology
+
+### Components
+
+MCP follows a client-server architecture:
+
+1. **Host**: The user-facing AI application (e.g., Claude Desktop, Cursor IDE)
+   - Initiates connections to MCP Servers
+   - Orchestrates flow between user requests, LLM processing, and tools
+
+2. **Client**: Component within the host that manages MCP Server communication
+   - Maintains 1:1 connection with a single Server
+   - Handles protocol-level details
+   - Acts as intermediary between Host and Server
+
+3. **Server**: External program/service exposing capabilities via MCP protocol
+
+### Capabilities
+
+MCP supports four main types of capabilities:
+
+| Capability | Description | Example |
+|------------|-------------|---------|
+| **Tools** | Executable functions for actions/computed data | Weather lookup function |
+| **Resources** | Read-only data sources for context | Scientific papers database |
+| **Prompts** | Pre-defined templates/workflows | Summarization template |
+| **Sampling** | Server-initiated LLM interaction requests | Code review and refinement |
+
+![MCP Use Case Example](llm/mcp/mcp_use_case.png)
+
+Example application capabilities:
+- **Tool**: Code Interpreter for executing LLM-written code
+- **Resource**: Documentation database
+- **Prompt**: Code style guidelines
+- **Sampling**: Code review and refinement process
+
+# Architectural Components of MCP
+
+The Model Context Protocol (MCP) is built on a client-server architecture that enables structured communication between AI models and external systems.
+
+## Host, Client, and Server
+
+The MCP architecture consists of three primary components, each with well-defined roles and responsibilities:
+
+![MCP Architecture](llm/mcp/host_client_tool.png)
+
+### Host
+
+The Host is the user-facing AI application that end-users interact with directly.
+
+**Examples include:**
+- AI Chat apps (OpenAI ChatGPT, Anthropic's Claude Desktop)
+- AI-enhanced IDEs (Cursor, Continue.dev)
+- Custom AI agents (LangChain, smolagents)
+
+**Responsibilities:**
+- Managing user interactions and permissions
+- Initiating connections to MCP Servers via MCP Clients
+- Orchestrating flow between user requests, LLM processing, and tools
+- Rendering results back to users
+
+### Client
+
+The Client is a component within the Host application that manages communication with a specific MCP Server.
+
+**Key characteristics:**
+- Maintains 1:1 connection with a single Server
+- Handles protocol-level details of MCP communication
+- Acts as intermediary between Host's logic and external Server
+
+### Server
+
+The Server is an external program or service that exposes capabilities to AI models via the MCP protocol.
+
+**Characteristics:**
+- Provides access to specific external tools, data sources, or services
+- Acts as lightweight wrappers around existing functionality
+- Can run locally or remotely
+- Exposes capabilities in standardized format
+
+## Communication Flow
+
+The components interact in a typical MCP workflow:
+
+1. **User Interaction**: User interacts with Host application
+2. **Host Processing**: Host processes input using LLM
+3. **Client Connection**: Host directs Client to connect to Server(s)
+4. **Capability Discovery**: Client queries Server for available capabilities
+5. **Capability Invocation**: Host instructs Client to invoke specific capabilities
+6. **Server Execution**: Server executes functionality and returns results
+7. **Result Integration**: Client relays results back to Host
+
+### Key Advantages
+
+- **Modularity**: Single Host can connect to multiple Servers
+- **Extensibility**: New Servers can be added without changing existing Hosts
+- **Composability**: Capabilities can be composed across different Servers
+- **Standardization**: Universal protocol for AI connectivity
+- **Safety**: Explicit user approval for sensitive operations
+- **Discoverability**: Dynamic discovery of capabilities
+- **Interoperability**: Works across different implementations
+
+# The Communication Protocol
+
+MCP defines a standardized communication protocol that enables Clients and Servers to exchange messages in a consistent, predictable way. This standardization is critical for interoperability across the community.
+
+## JSON-RPC: The Foundation
+
+At its core, MCP uses JSON-RPC 2.0 as the message format for all communication between Clients and Servers. JSON-RPC is a lightweight remote procedure call protocol encoded in JSON, which makes it:
+
+- Human-readable and easy to debug
+- Language-agnostic, supporting implementation in any programming environment
+- Well-established, with clear specifications and widespread adoption
+
+## Message Types
+![MCP Communication Flow](llm/mcp/mcp_communication.png)
+The protocol defines three types of messages:
+
+### 1. Requests
+Sent from Client to Server to initiate an operation. A Request message includes:
+- A unique identifier (id)
+- The method name to invoke (e.g., tools/call)
+- Parameters for the method (if any)
+
+**Example Request:**
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": {
+    "name": "weather",
+    "arguments": {
+      "location": "San Francisco"
+    }
+  }
+}
+```
+
+### 2. Responses
+Sent from Server to Client in reply to a Request. A Response message includes:
+- The same id as the corresponding Request
+- Either a result (for success) or an error (for failure)
+
+**Example Success Response:**
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "temperature": 62,
+    "conditions": "Partly cloudy"
+  }
+}
+```
+
+**Example Error Response:**
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "error": {
+    "code": -32602,
+    "message": "Invalid location parameter"
+  }
+}
+```
+
+### 3. Notifications
+One-way messages that don't require a response. Typically sent from Server to Client to provide updates or notifications about events.
+
+**Example Notification:**
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "progress",
+  "params": {
+    "message": "Processing data...",
+    "percent": 50
+  }
+}
+```
+
+## Transport Mechanisms
+
+JSON-RPC defines the message format, but MCP also specifies how these messages are transported between Clients and Servers. Two primary transport mechanisms are supported:
+
+### stdio (Standard Input/Output)
+Used for local communication, where the Client and Server run on the same machine:
+- Host application launches Server as a subprocess
+- Communication via stdin/stdout
+- Use cases: local tools, file system access, running local scripts
+- Advantages: simple, no network configuration, OS-level sandboxing
+
+### HTTP + SSE (Server-Sent Events) / Streamable HTTP
+Used for remote communication, where the Client and Server might be on different machines:
+- Communication over HTTP with SSE for updates
+- Use cases: remote APIs, cloud services, shared resources
+- Advantages: works across networks, web service integration, serverless compatibility
+- Recent updates: "Streamable HTTP" for dynamic SSE upgrades
+
+## The Interaction Lifecycle
+
+The MCP protocol defines a structured interaction lifecycle between Clients and Servers:
+
+### 1. Initialization
+- Client connects to Server
+- Exchange protocol versions and capabilities
+- Server responds with supported version and capabilities
+- Client confirms initialization complete
+
+### 2. Discovery
+- Client requests information about available capabilities
+- Server responds with list of available tools
+- Process repeated for each capability type
+
+### 3. Execution
+- Client invokes capabilities based on Host's needs
+- Server may send progress notifications
+- Server responds with results
+
+### 4. Termination
+- Connection gracefully closed when no longer needed
+- Server acknowledges shutdown request
+- Client sends final exit message
+
+## Protocol Evolution
+
+The MCP protocol is designed to be extensible and adaptable:
+- Version negotiation during initialization
+- Backward compatibility support
+- Capability discovery for feature adaptation
+- Support for both basic and advanced Servers
+
+# Understanding MCP Capabilities
+
+MCP Servers expose four main categories of capabilities to Clients through the communication protocol. Each category has distinct characteristics and use cases.
+
+## Tools
+
+Tools are executable functions or actions that the AI model can invoke through the MCP protocol.
+
+**Characteristics:**
+- **Control**: Model-controlled (LLM decides when to call)
+- **Safety**: Requires explicit user approval (due to side effects)
+- **Use Cases**: Sending messages, creating tickets, querying APIs, calculations
+
+**Example:**
+```python
+def get_weather(location: str) -> dict:
+    """Get the current weather for a specified location."""
+    # Connect to weather API and fetch data
+    return {
+        "temperature": 72,
+        "conditions": "Sunny",
+        "humidity": 45
+    }
+```
+
+## Resources
+
+Resources provide read-only access to data sources, allowing the AI model to retrieve context without complex logic.
+
+**Characteristics:**
+- **Control**: Application-controlled (Host decides when to access)
+- **Nature**: Data retrieval with minimal computation
+- **Safety**: Lower security risks (read-only)
+- **Use Cases**: Accessing files, database records, configuration
+
+**Example:**
+```python
+def read_file(file_path: str) -> str:
+    """Read the contents of a file at the specified path."""
+    with open(file_path, 'r') as f:
+        return f.read()
+```
+
+## Prompts
+
+Prompts are predefined templates or workflows that guide interactions between users, AI models, and Server capabilities.
+
+**Characteristics:**
+- **Control**: User-controlled (selected from UI)
+- **Purpose**: Structure interactions for optimal capability use
+- **Selection**: Chosen before AI processing begins
+- **Use Cases**: Common workflows, task templates, guided interactions
+
+**Example:**
+```python
+def code_review(code: str, language: str) -> list:
+    """Generate a code review for the provided code snippet."""
+    return [
+        {
+            "role": "system",
+            "content": f"You are a code reviewer examining {language} code. Provide a detailed review highlighting best practices, potential issues, and suggestions for improvement."
+        },
+        {
+            "role": "user",
+            "content": f"Please review this {language} code:\n\n```{language}\n{code}\n```"
+        }
+    ]
+```
+
+## Sampling
+
+Sampling allows Servers to request the Client to perform LLM interactions.
+
+**Characteristics:**
+- **Control**: Server-initiated, Client/Host facilitated
+- **Purpose**: Enable server-driven agentic behaviors
+- **Safety**: Requires user approval
+- **Use Cases**: Complex multi-step tasks, autonomous workflows
+
+**Example:**
+```python
+def request_sampling(messages, system_prompt=None, include_context="none"):
+    """Request LLM sampling from the client."""
+    return {
+        "role": "assistant",
+        "content": "Analysis of the provided data..."
+    }
+```
+
+### Sampling Flow
+1. Server sends sampling/createMessage request
+2. Client reviews and can modify request
+3. Client samples from LLM
+4. Client reviews completion
+5. Client returns result to server
+
+## How Capabilities Work Together
+
+| Capability | Controlled By | Direction | Side Effects | Approval Needed | Typical Use Cases |
+|------------|--------------|-----------|--------------|----------------|------------------|
+| **Tools** | Model (LLM) | Client → Server | Yes | Yes | Actions, API calls, data manipulation |
+| **Resources** | Application | Client → Server | No | Typically no | Data retrieval, context gathering |
+| **Prompts** | User | Server → Client | No | No | Guided workflows, specialized templates |
+| **Sampling** | Server | Server → Client → Server | Indirectly | Yes | Multi-step tasks, agentic behaviors |
+
+### Complementary Interactions
+1. User selects a Prompt to start workflow
+2. Prompt includes context from Resources
+3. AI model calls Tools for specific actions
+4. Server uses Sampling for complex operations
+
+## Discovery Process
+
+MCP enables dynamic capability discovery through specific list methods:
+- `tools/list`: Discover available Tools
+- `resources/list`: Discover available Resources
+- `prompts/list`: Discover available Prompts
+
+This dynamic discovery allows Clients to adapt to Server capabilities without hardcoded knowledge.
+
+# Chapter Summary
+
+## Overview
+
+The Model Context Protocol (MCP) is a standardized protocol designed to connect AI models with external tools, data sources, and environments. It addresses the limitations of existing AI systems by enabling interoperability and access to real-time information.
+
+## Key Concepts
+
+### Client-Server Architecture
+MCP follows a client-server model where clients manage communication between users and servers. This architecture promotes modularity, allowing for easy addition of new servers without requiring changes to existing hosts.
+
+### Components
+
+#### Host
+- The user-facing AI application
+- Serves as the interface for end-users
+- Manages user interactions and permissions
+
+#### Client
+- Component within the host application
+- Manages communication with specific MCP server
+- Maintains 1:1 connections with servers
+- Handles protocol-level details
+
+#### Server
+- External program or service
+- Provides access to tools, data sources, or services
+- Acts as lightweight wrapper around existing functionalities
+
+### Capabilities
+
+#### Tools
+- Executable functions for actions
+- Model-controlled
+- Require user approval
+- Examples: sending messages, querying APIs
+
+#### Resources
+- Read-only data sources
+- Application-controlled
+- Designed for data retrieval
+- Similar to GET endpoints in REST APIs
+
+#### Prompts
+- Pre-defined templates or workflows
+- User-controlled
+- Guide interactions
+- Set context for interactions
+
+#### Sampling
+- Server-initiated LLM processing requests
+- Enable server-driven agentic behaviors
+- Support recursive/multi-step interactions
+- Require user approval
+
+### Communication Protocol
+- Uses JSON-RPC 2.0 message format
+- Two transport mechanisms:
+  - stdio (local communication)
+  - HTTP+SSE (remote communication)
+- Message types: requests, responses, notifications
+
+### Discovery Process
+- Dynamic capability discovery
+- List methods (tools/list, resources/list, prompts/list)
+- No hardcoded knowledge required
+- Adaptable to server capabilities
+
+### MCP SDKs
+- Available in various programming languages
+- Handle protocol-level communication
+- Manage capability registration
+- Provide error handling
+- Simplify development process
